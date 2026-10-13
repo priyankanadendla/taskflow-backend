@@ -9,10 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = {
-    "http://localhost:5173",
-    "https://taskflow-pro-sandy-eta.vercel.app"
-})
 public class TaskController {
 
     private final TaskRepository taskRepository;
@@ -31,7 +27,22 @@ public class TaskController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Task createTask(@RequestBody Task task) {
+        if (task.getTitle() == null || task.getTitle().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task title cannot be empty");
+        }
+
         task.setId(null);
+        task.setTitle(task.getTitle().trim());
+        if (task.getCategory() == null || task.getCategory().trim().isEmpty()) {
+            task.setCategory("Work");
+        }
+        if (task.getPriority() == null || task.getPriority().trim().isEmpty()) {
+            task.setPriority("Medium");
+        }
+        if (task.getDescription() == null) {
+            task.setDescription("");
+        }
+
         return taskRepository.save(task);
     }
 
@@ -45,8 +56,18 @@ public class TaskController {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Task not found"));
 
-        task.setTitle(updatedTask.getTitle());
-        task.setDescription(updatedTask.getDescription());
+        if (updatedTask.getTitle() != null && !updatedTask.getTitle().trim().isEmpty()) {
+            task.setTitle(updatedTask.getTitle().trim());
+        }
+        if (updatedTask.getDescription() != null) {
+            task.setDescription(updatedTask.getDescription());
+        }
+        if (updatedTask.getCategory() != null && !updatedTask.getCategory().trim().isEmpty()) {
+            task.setCategory(updatedTask.getCategory().trim());
+        }
+        if (updatedTask.getPriority() != null && !updatedTask.getPriority().trim().isEmpty()) {
+            task.setPriority(updatedTask.getPriority().trim());
+        }
         task.setCompleted(updatedTask.isCompleted());
 
         return taskRepository.save(task);
