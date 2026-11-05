@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.priyanka.taskflow_backend.dto.request.TaskRequest;
+import com.priyanka.taskflow_backend.dto.request.TaskUpdateRequest;
+import com.priyanka.taskflow_backend.dto.response.TaskResponse;
+
 @Service
 @Transactional
 public class TaskService {
@@ -19,71 +23,73 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<TaskResponse> getAllTasks() {
+        return taskRepository.findAll()
+                .stream()
+                .map(TaskResponse::new)
+                .toList();
     }
 
-    public Task createTask(Task task) {
+    public TaskResponse createTask(TaskRequest request) {
 
-        if (task.getTitle() == null || task.getTitle().trim().isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Task title cannot be empty"
-            );
-        }
+        Task task = new Task();
 
-        task.setId(null);
-        task.setTitle(task.getTitle().trim());
+        task.setTitle(request.getTitle().trim());
 
-        if (task.getCategory() == null || task.getCategory().trim().isEmpty()) {
-            task.setCategory("Work");
-        } else {
-            task.setCategory(task.getCategory().trim());
-        }
+        task.setDescription(
+                request.getDescription() == null
+                        ? ""
+                        : request.getDescription().trim()
+        );
 
-        if (task.getPriority() == null || task.getPriority().trim().isEmpty()) {
-            task.setPriority("Medium");
-        } else {
-            task.setPriority(task.getPriority().trim());
-        }
+        task.setCategory(
+                request.getCategory() == null
+                        || request.getCategory().isBlank()
+                        ? "Work"
+                        : request.getCategory().trim()
+        );
 
-        if (task.getDescription() == null) {
-            task.setDescription("");
-        }
+        task.setPriority(
+                request.getPriority() == null
+                        || request.getPriority().isBlank()
+                        ? "Medium"
+                        : request.getPriority().trim()
+        );
 
-        return taskRepository.save(task);
+        task.setCompleted(false);
+
+        return new TaskResponse(taskRepository.save(task));
     }
 
-    public Task updateTask(Long id, Task updatedTask) {
+    public TaskResponse updateTask(Long id, TaskUpdateRequest request) {
 
-        Task existingTask = taskRepository.findById(id)
+        Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Task not found"
                 ));
 
-        if (updatedTask.getTitle() != null
-                && !updatedTask.getTitle().trim().isEmpty()) {
-            existingTask.setTitle(updatedTask.getTitle().trim());
+        if (request.getTitle() != null) {
+            task.setTitle(request.getTitle().trim());
         }
 
-        if (updatedTask.getDescription() != null) {
-            existingTask.setDescription(updatedTask.getDescription());
+        if (request.getDescription() != null) {
+            task.setDescription(request.getDescription().trim());
         }
 
-        if (updatedTask.getCategory() != null
-                && !updatedTask.getCategory().trim().isEmpty()) {
-            existingTask.setCategory(updatedTask.getCategory().trim());
+        if (request.getCategory() != null) {
+            task.setCategory(request.getCategory().trim());
         }
 
-        if (updatedTask.getPriority() != null
-                && !updatedTask.getPriority().trim().isEmpty()) {
-            existingTask.setPriority(updatedTask.getPriority().trim());
+        if (request.getPriority() != null) {
+            task.setPriority(request.getPriority().trim());
         }
 
-        existingTask.setCompleted(updatedTask.isCompleted());
+        if (request.getCompleted() != null) {
+            task.setCompleted(request.getCompleted());
+        }
 
-        return taskRepository.save(existingTask);
+        return new TaskResponse(taskRepository.save(task));
     }
 
     public void deleteTask(Long id) {

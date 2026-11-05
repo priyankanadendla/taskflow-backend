@@ -6,6 +6,12 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
+import com.priyanka.taskflow_backend.dto.request.TaskRequest;
+import com.priyanka.taskflow_backend.dto.request.TaskUpdateRequest;
+import com.priyanka.taskflow_backend.dto.response.TaskResponse;
+
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -16,28 +22,25 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    // Get all tasks
     @GetMapping
-    public List<Task> getAllTasks() {
+    public List<TaskResponse> getAllTasks() {
         return taskService.getAllTasks();
     }
 
-    // Create a task
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Task createTask(@RequestBody Task task) {
-        return taskService.createTask(task);
+    public TaskResponse createTask(
+            @Valid @RequestBody TaskRequest request) {
+        return taskService.createTask(request);
     }
 
-    // Update a task
     @PutMapping("/{id}")
-    public Task updateTask(
+    public TaskResponse updateTask(
             @PathVariable Long id,
-            @RequestBody Task updatedTask) {
-        return taskService.updateTask(id, updatedTask);
+            @Valid @RequestBody TaskUpdateRequest request) {
+        return taskService.updateTask(id, request);
     }
 
-    // Delete a task
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTask(@PathVariable Long id) {
