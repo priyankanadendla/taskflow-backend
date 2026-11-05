@@ -185,4 +185,38 @@ class TaskflowBackendApplicationTests {
                 .content("{\"title\":\"Updated Task\"}"))
                 .andExpect(status().isNotFound());
     }
+	@org.junit.jupiter.api.Test
+void invalidPriorityReturnsStandardErrorResponse() throws Exception {
+
+    mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .post("/api/tasks")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                                "title": "Test Task",
+                                "description": "Testing validation",
+                                "category": "Work",
+                                "priority": "Urgent"
+                            }
+                            """)
+    )
+    .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                    .status().isBadRequest()
+    )
+    .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                    .jsonPath("$.status").value(400)
+    )
+    .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                    .jsonPath("$.message").value("Validation failed")
+    )
+    .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                    .jsonPath("$.validationErrors.priority")
+                    .value("Priority must be Low, Medium, or High")
+    );
+}
 }
