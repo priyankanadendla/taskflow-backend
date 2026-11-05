@@ -1,87 +1,49 @@
 
 package com.priyanka.taskflow_backend;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+
+import com.priyanka.taskflow_backend.dto.request.TaskRequest;
+import com.priyanka.taskflow_backend.dto.request.TaskUpdateRequest;
+import com.priyanka.taskflow_backend.dto.response.TaskResponse;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    private final TaskRepository taskRepository;
+    private final TaskService taskService;
 
-    public TaskController(TaskRepository taskRepository) {
-        this.taskRepository = taskRepository;
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
     }
 
-    // Get all tasks
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<TaskResponse> getAllTasks() {
+        return taskService.getAllTasks();
     }
 
-    // Add a new task
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Task createTask(@RequestBody Task task) {
-        if (task.getTitle() == null || task.getTitle().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task title cannot be empty");
-        }
-
-        task.setId(null);
-        task.setTitle(task.getTitle().trim());
-        if (task.getCategory() == null || task.getCategory().trim().isEmpty()) {
-            task.setCategory("Work");
-        }
-        if (task.getPriority() == null || task.getPriority().trim().isEmpty()) {
-            task.setPriority("Medium");
-        }
-        if (task.getDescription() == null) {
-            task.setDescription("");
-        }
-
-        return taskRepository.save(task);
+    public TaskResponse createTask(
+            @Valid @RequestBody TaskRequest request) {
+        return taskService.createTask(request);
     }
 
-    // Update an existing task
     @PutMapping("/{id}")
-    public Task updateTask(
+    public TaskResponse updateTask(
             @PathVariable Long id,
-            @RequestBody Task updatedTask) {
-
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Task not found"));
-
-        if (updatedTask.getTitle() != null && !updatedTask.getTitle().trim().isEmpty()) {
-            task.setTitle(updatedTask.getTitle().trim());
-        }
-        if (updatedTask.getDescription() != null) {
-            task.setDescription(updatedTask.getDescription());
-        }
-        if (updatedTask.getCategory() != null && !updatedTask.getCategory().trim().isEmpty()) {
-            task.setCategory(updatedTask.getCategory().trim());
-        }
-        if (updatedTask.getPriority() != null && !updatedTask.getPriority().trim().isEmpty()) {
-            task.setPriority(updatedTask.getPriority().trim());
-        }
-        task.setCompleted(updatedTask.isCompleted());
-
-        return taskRepository.save(task);
+            @Valid @RequestBody TaskUpdateRequest request) {
+        return taskService.updateTask(id, request);
     }
 
-    // Delete a task
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTask(@PathVariable Long id) {
-        if (!taskRepository.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Task not found");
-        }
-
-        taskRepository.deleteById(id);
+        taskService.deleteTask(id);
     }
 }
