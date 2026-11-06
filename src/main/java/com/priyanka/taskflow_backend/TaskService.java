@@ -53,6 +53,24 @@ public class TaskService {
                 .toList();
     }
 
+    // Search tasks by description (case-insensitive)
+    @Transactional(readOnly = true)
+    public List<TaskResponse> searchTasksByDescription(String description) {
+
+        if (description == null || description.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Search description cannot be empty"
+            );
+        }
+
+        return taskRepository
+                .findByDescriptionContainingIgnoreCase(description.trim())
+                .stream()
+                .map(TaskResponse::new)
+                .toList();
+    }
+
     // Filter tasks by category, priority and completion status
     @Transactional(readOnly = true)
     public List<TaskResponse> getFilteredTasks(

@@ -24,4 +24,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Search tasks by title (case-insensitive)
     List<Task> findByTitleContainingIgnoreCase(String title);
+
+    // Search tasks by description (case-insensitive)
+    List<Task> findByDescriptionContainingIgnoreCase(String description);
 }
