@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 
 import com.priyanka.taskflow_backend.dto.request.TaskRequest;
 import com.priyanka.taskflow_backend.dto.request.TaskUpdateRequest;
+import com.priyanka.taskflow_backend.dto.response.TaskPageResponse;
 import com.priyanka.taskflow_backend.dto.response.TaskResponse;
 
 @RestController
@@ -37,6 +38,18 @@ public class TaskController {
                 category,
                 priority,
                 completed);
+    }
+
+    // Get paginated and sorted tasks
+    @GetMapping("/paginated")
+    public TaskPageResponse getPaginatedTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        return taskService.getPaginatedTasks(
+                page, size, sortBy, direction);
     }
 
     @PostMapping
