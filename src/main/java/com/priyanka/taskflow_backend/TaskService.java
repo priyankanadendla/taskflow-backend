@@ -186,6 +186,7 @@ public class TaskService {
         );
     }
 
+    // Create a new task
     public TaskResponse createTask(TaskRequest request) {
 
         Task task = new Task();
@@ -212,11 +213,13 @@ public class TaskService {
                         : request.getPriority().trim()
         );
 
-        task.setCompleted(false);
+        // Save the completion status received from the request
+        task.setCompleted(request.isCompleted());
 
         return new TaskResponse(taskRepository.save(task));
     }
 
+    // Update an existing task
     public TaskResponse updateTask(Long id, TaskUpdateRequest request) {
 
         Task task = taskRepository.findById(id)
@@ -248,6 +251,7 @@ public class TaskService {
         return new TaskResponse(taskRepository.save(task));
     }
 
+    // Delete a task
     public void deleteTask(Long id) {
 
         if (!taskRepository.existsById(id)) {

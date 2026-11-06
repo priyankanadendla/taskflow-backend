@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -185,38 +186,143 @@ class TaskflowBackendApplicationTests {
                 .content("{\"title\":\"Updated Task\"}"))
                 .andExpect(status().isNotFound());
     }
-	@org.junit.jupiter.api.Test
-void invalidPriorityReturnsStandardErrorResponse() throws Exception {
 
-    mockMvc.perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                    .post("/api/tasks")
-                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                    .content("""
-                            {
-                                "title": "Test Task",
-                                "description": "Testing validation",
-                                "category": "Work",
-                                "priority": "Urgent"
-                            }
-                            """)
-    )
-    .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                    .status().isBadRequest()
-    )
-    .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                    .jsonPath("$.status").value(400)
-    )
-    .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                    .jsonPath("$.message").value("Validation failed")
-    )
-    .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                    .jsonPath("$.validationErrors.priority")
-                    .value("Priority must be Low, Medium, or High")
-    );
-}
+    // Test 10: Invalid priority should return standard error response.
+    @Test
+    void invalidPriorityReturnsStandardErrorResponse() throws Exception {
+
+        mockMvc.perform(post("/api/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "title": "Test Task",
+                            "description": "Testing validation",
+                            "category": "Work",
+                            "priority": "Urgent"
+                        }
+                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.validationErrors.priority")
+                        .value("Priority must be Low, Medium, or High"));
+    }
+
+    // Helper method to extract a numeric value from JSON response.
+    private double extractNumber(String json, String key) {
+
+        java.util.regex.Pattern pattern =
+                java.util.regex.Pattern.compile(
+                        "\"" + key + "\"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)");
+
+        java.util.regex.Matcher matcher = pattern.matcher(json);
+
+        if (!matcher.find()) {
+            throw new AssertionError("Missing JSON field: " + key);
+        }
+
+        return Double.parseDouble(matcher.group(1));
+    }
+
+    // Helper method to create a task for statistics testing.
+    private Long createStatisticsTestTask(
+            String title, boolean completed) throws Exception {
+
+        String jsonRequest = """
+                {
+                    "title": "%s",
+                    "category": "Testing",
+                    "priority": "Medium",
+                    "completed": %s
+                }
+                """.formatted(title, completed);
+
+        MvcResult result = mockMvc.perform(post("/api/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String response = result.getResponse().getContentAsString();
+
+        return (long) extractNumber(response, "id");
+    }
+
+    // Test 11: Statistics should return correct task counts and percentage.
+    @Test
+    void testTaskStatistics() throws Exception {
+
+        Long completedTaskId = null;
+        Long pendingTaskId = null;
+
+        try {
+            MvcResult beforeResult = mockMvc.perform(
+                    get("/api/tasks/statistics"))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            String beforeJson =
+                    beforeResult.getResponse().getContentAsString();
+
+            long beforeTotal =
+                    (long) extractNumber(beforeJson, "totalTasks");
+
+            long beforeCompleted =
+                    (long) extractNumber(beforeJson, "completedTasks");
+
+            long beforePending =
+                    (long) extractNumber(beforeJson, "pendingTasks");
+
+            completedTaskId = createStatisticsTestTask(
+                    "Completed Statistics Test", true);
+
+            pendingTaskId = createStatisticsTestTask(
+                    "Pending Statistics Test", false);
+
+            MvcResult result = mockMvc.perform(
+                    get("/api/tasks/statistics"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalTasks").isNumber())
+                    .andExpect(jsonPath("$.completedTasks").isNumber())
+                    .andExpect(jsonPath("$.pendingTasks").isNumber())
+                    .andExpect(jsonPath("$.completionPercentage").isNumber())
+                    .andReturn();
+
+            String response = result.getResponse().getContentAsString();
+
+            long total = (long) extractNumber(response, "totalTasks");
+
+            long completed =
+                    (long) extractNumber(response, "completedTasks");
+
+            long pending =
+                    (long) extractNumber(response, "pendingTasks");
+
+            double percentage =
+                    extractNumber(response, "completionPercentage");
+
+            assertEquals(beforeTotal + 2, total);
+            assertEquals(beforeCompleted + 1, completed);
+            assertEquals(beforePending + 1, pending);
+
+            assertEquals(total, completed + pending);
+
+            double expectedPercentage =
+                    Math.round((completed * 10000.0) / total) / 100.0;
+
+            assertEquals(expectedPercentage, percentage, 0.001);
+
+        } finally {
+
+            if (completedTaskId != null) {
+                mockMvc.perform(delete("/api/tasks/" + completedTaskId))
+                        .andExpect(status().isNoContent());
+            }
+
+            if (pendingTaskId != null) {
+                mockMvc.perform(delete("/api/tasks/" + pendingTaskId))
+                        .andExpect(status().isNoContent());
+            }
+        }
+    }
 }

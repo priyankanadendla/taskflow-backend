@@ -17,12 +17,13 @@ public class TaskRequest {
     @Size(max = 50, message = "Category cannot exceed 50 characters")
     private String category;
 
-   @Pattern(
-    regexp = "(?i)^(LOW|MEDIUM|HIGH)$",
-    message = "Priority must be Low, Medium, or High"
-)
-
+    @Pattern(
+        regexp = "(?i)^(LOW|MEDIUM|HIGH)$",
+        message = "Priority must be Low, Medium, or High"
+    )
     private String priority;
+
+    private boolean completed = false;
 
     public TaskRequest() {
     }
@@ -57,5 +58,13 @@ public class TaskRequest {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 }
