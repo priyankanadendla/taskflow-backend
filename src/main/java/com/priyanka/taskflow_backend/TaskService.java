@@ -1,3 +1,4 @@
+
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
@@ -29,6 +30,24 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasks() {
         return taskRepository.findAll()
+                .stream()
+                .map(TaskResponse::new)
+                .toList();
+    }
+
+    // Search tasks by title (case-insensitive)
+    @Transactional(readOnly = true)
+    public List<TaskResponse> searchTasks(String title) {
+
+        if (title == null || title.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Search title cannot be empty"
+            );
+        }
+
+        return taskRepository
+                .findByTitleContainingIgnoreCase(title.trim())
                 .stream()
                 .map(TaskResponse::new)
                 .toList();

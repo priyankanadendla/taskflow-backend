@@ -1,3 +1,4 @@
+
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
@@ -25,6 +26,13 @@ public class TaskController {
     @GetMapping
     public List<TaskResponse> getAllTasks() {
         return taskService.getAllTasks();
+    }
+
+    // Search tasks by title
+    @GetMapping("/search")
+    public List<TaskResponse> searchTasks(
+            @RequestParam String title) {
+        return taskService.searchTasks(title);
     }
 
     // Filter tasks by category, priority and completion status

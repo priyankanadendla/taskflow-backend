@@ -1,3 +1,4 @@
+
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
+    // Filter tasks by category, priority and completion status
     @Query("""
             SELECT t FROM Task t
             WHERE (:category IS NULL OR LOWER(t.category) = LOWER(:category))
@@ -19,4 +21,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("priority") String priority,
             @Param("completed") Boolean completed
     );
+
+    // Search tasks by title (case-insensitive)
+    List<Task> findByTitleContainingIgnoreCase(String title);
 }
