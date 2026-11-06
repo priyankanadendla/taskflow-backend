@@ -1,4 +1,3 @@
-
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
@@ -25,6 +24,27 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasks() {
         return taskRepository.findAll()
+                .stream()
+                .map(TaskResponse::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getFilteredTasks(
+            String category,
+            String priority,
+            Boolean completed) {
+
+        category = (category == null || category.isBlank())
+                ? null : category.trim();
+
+        priority = (priority == null || priority.isBlank())
+                ? null : priority.trim();
+
+        return taskRepository.findByFilters(
+                        category,
+                        priority,
+                        completed)
                 .stream()
                 .map(TaskResponse::new)
                 .toList();
