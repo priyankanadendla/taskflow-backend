@@ -35,6 +35,13 @@ public class TaskController {
         return taskService.searchTasks(title);
     }
 
+    // Search tasks by description
+    @GetMapping("/search/description")
+    public List<TaskResponse> searchTasksByDescription(
+            @RequestParam String description) {
+        return taskService.searchTasksByDescription(description);
+    }
+
     // Filter tasks by category, priority and completion status
     @GetMapping("/filter")
     public List<TaskResponse> getFilteredTasks(
