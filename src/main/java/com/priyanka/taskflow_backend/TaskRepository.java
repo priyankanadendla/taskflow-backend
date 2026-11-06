@@ -27,4 +27,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Search tasks by description (case-insensitive)
     List<Task> findByDescriptionContainingIgnoreCase(String description);
+
+    // Count completed tasks
+    long countByCompletedTrue();
+
+    // Count pending tasks
+    long countByCompletedFalse();
 }
