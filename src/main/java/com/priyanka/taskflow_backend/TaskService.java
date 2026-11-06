@@ -1,4 +1,3 @@
-
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
@@ -35,6 +34,29 @@ public class TaskService {
                 .toList();
     }
 
+    // Filter tasks by category, priority and completion status
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getFilteredTasks(
+            String category,
+            String priority,
+            Boolean completed) {
+
+        category = (category == null || category.isBlank())
+                ? null : category.trim();
+
+        priority = (priority == null || priority.isBlank())
+                ? null : priority.trim();
+
+        return taskRepository.findByFilters(
+                        category,
+                        priority,
+                        completed)
+                .stream()
+                .map(TaskResponse::new)
+                .toList();
+    }
+
+    // Get paginated and sorted tasks
     @Transactional(readOnly = true)
     public TaskPageResponse getPaginatedTasks(
             int page, int size, String sortBy, String direction) {

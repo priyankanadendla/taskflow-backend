@@ -27,6 +27,20 @@ public class TaskController {
         return taskService.getAllTasks();
     }
 
+    // Filter tasks by category, priority and completion status
+    @GetMapping("/filter")
+    public List<TaskResponse> getFilteredTasks(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) Boolean completed) {
+
+        return taskService.getFilteredTasks(
+                category,
+                priority,
+                completed);
+    }
+
+    // Get paginated and sorted tasks
     @GetMapping("/paginated")
     public TaskPageResponse getPaginatedTasks(
             @RequestParam(defaultValue = "0") int page,
@@ -35,8 +49,7 @@ public class TaskController {
             @RequestParam(defaultValue = "asc") String direction) {
 
         return taskService.getPaginatedTasks(
-                page, size, sortBy, direction
-        );
+                page, size, sortBy, direction);
     }
 
     @PostMapping
