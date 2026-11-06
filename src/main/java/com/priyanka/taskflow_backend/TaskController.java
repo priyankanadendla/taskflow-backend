@@ -2,6 +2,7 @@
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -65,6 +66,12 @@ public class TaskController {
 
         return taskService.getPaginatedTasks(
                 page, size, sortBy, direction);
+    }
+
+    // Get task statistics
+    @GetMapping("/statistics")
+    public Map<String, Object> getTaskStatistics() {
+        return taskService.getTaskStatistics();
     }
 
     @PostMapping

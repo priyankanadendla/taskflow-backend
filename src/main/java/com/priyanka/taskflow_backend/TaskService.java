@@ -2,6 +2,7 @@
 package com.priyanka.taskflow_backend;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,6 +70,27 @@ public class TaskService {
                 .stream()
                 .map(TaskResponse::new)
                 .toList();
+    }
+
+    // Get task statistics
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTaskStatistics() {
+
+        long totalTasks = taskRepository.count();
+        long completedTasks = taskRepository.countByCompletedTrue();
+        long pendingTasks = taskRepository.countByCompletedFalse();
+
+        double completionPercentage = totalTasks == 0
+                ? 0.0
+                : (completedTasks * 100.0) / totalTasks;
+
+        return Map.of(
+                "totalTasks", totalTasks,
+                "completedTasks", completedTasks,
+                "pendingTasks", pendingTasks,
+                "completionPercentage",
+                Math.round(completionPercentage * 100.0) / 100.0
+        );
     }
 
     // Filter tasks by category, priority and completion status
